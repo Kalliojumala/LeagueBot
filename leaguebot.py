@@ -172,10 +172,12 @@ year_X = (datetime.now()+timedelta(days=365)).strftime("%Y")
 @bot.command(name='ranked')
 async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
     try:
-        if server != 'kr':
-            server_full = server + '1'
-        elif server == "eune":
+        if server == "eune":
             server_full = "eun1"
+        elif server != 'kr':
+            server_full = server + '1'
+        else: 
+            server_full = server
 
         name = sort_summoner_name(name, name2, name3)
 
