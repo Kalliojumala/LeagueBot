@@ -174,7 +174,9 @@ async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
     try:
         if server != 'kr':
             server_full = server + '1'
-        
+        elif server == "eune":
+            server_full = "eun1"
+
         name = sort_summoner_name(name, name2, name3)
 
         user_url = get_url(server)
@@ -214,7 +216,7 @@ async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
 
         )
         error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.", inline=False)
-        error_message.add_field(name='Not ranked? :/', value="This message is displayed with correct parameters if the user\nhas not completed placement games in the current season!", inline=False)
+        error_message.add_field(name='Not ranked? :/', value="This message is displayed with correct parameters if the user\nhas not completed ranked placement games in the current season!", inline=False)
         error_message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
         error_message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
         error_message.add_field(name='Supported servers', value='North America = na\nEurope West = euw\nEurope Nordic/East = eune\nKorea = kr', inline=False)
@@ -227,9 +229,15 @@ async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
 @bot.command(name='champs')
 async def champions_mastery(ctx, server='euw', name="",name2="", name3=""):
     try:
-        if server != 'kr':
+        if server == "eune":
+            server_full = "eun1"
+        elif server != 'kr':
             server_full = server + '1'
-    
+        else: 
+            server_full = server
+
+        
+
         name = sort_summoner_name(name, name2, name3)
         user_champs = get_champion_stats(name, server_full)
         embed = discord.Embed(
@@ -252,7 +260,7 @@ async def champions_mastery(ctx, server='euw', name="",name2="", name3=""):
         error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.")
         error_message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
         error_message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
-        error_message.add_field(name='Supported servers', value='North America = na\nEurope West = euw\nEurope Nordic/East = eune\nKorea = kr', inline=False)
+        
 
 
         await ctx.send(embed=error_message)
@@ -271,10 +279,11 @@ async def help_print(ctx):
 
     await ctx.send(embed=message)
 
-print("Bot Connected!")
-bot.run(discord_token) 
+if __name__ == '__main__':
+    print("Bot Connected!")
+    bot.run(discord_token) 
 
-print("Bot loggin off...")
+    print("Bot loggin off...")
 
 
 

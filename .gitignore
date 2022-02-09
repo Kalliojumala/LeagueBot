@@ -114,3 +114,4 @@ dmypy.json
 .pyre/
 
 config.txt
+functiontest.py
