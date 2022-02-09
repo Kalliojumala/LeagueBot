@@ -213,7 +213,8 @@ async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
         error_message = discord.Embed(
 
         )
-        error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.")
+        error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.", inline=False)
+        error_message.add_field(name='Not ranked? :/', value="This message is displayed with correct parameters if the user\nhas not completed placement games in the current season!", inline=False)
         error_message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
         error_message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
         error_message.add_field(name='Supported servers', value='North America = na\nEurope West = euw\nEurope Nordic/East = eune\nKorea = kr', inline=False)
