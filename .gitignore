@@ -116,3 +116,4 @@ dmypy.json
 config.txt
 functiontest.py
 nohup.out
+latest_patch.txt

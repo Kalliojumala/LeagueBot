@@ -7,7 +7,7 @@ import requests
 from riotwatcher import LolWatcher, ApiError
 from configparser import ConfigParser
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from datetime import datetime,timedelta
 from bs4 import BeautifulSoup
 
@@ -154,6 +154,8 @@ def get_url(server: str):
     return None
 
 def sort_summoner_name(name, name2, name3):
+    """Adds spacebar formatting for names
+    """
     if name2 == "":
         return name
     else:
@@ -162,13 +164,37 @@ def sort_summoner_name(name, name2, name3):
             concat_name += "%20" + name3
         return concat_name
     
-def get_patch_notes(): 
+def get_new_patch_notes():
+    """Fetches new patch notes from Riot.
+
+    Return:
+        str: full URL to patch notes
+    """ 
     a = requests.get("https://www.leagueoflegends.com/en-us/news/tags/patch-notes/")
     soup = BeautifulSoup(a.content, "html.parser")
-
     a_tags = soup.find("a")
     
-    return "https://leagueoflegends.com" + a_tags["href"]  
+    return "https://leagueoflegends.com" + a_tags["href"]
+
+def save_patch_notes(patch):
+    """Saves patch notes to a local file, used in comparing patch notes in automatic messaging.
+    """
+    with open("latest_patch.txt" , "w") as file_1:
+        file_1.write(patch + "\n")
+        file_1.close()
+
+def compare_patch( teststring: str="none" ):
+    """Fetch and compare latest patch notes to existing (local save) ones
+
+    Return:
+        Boolean: true if fetch is newer than saved
+        String: full URL to new notes
+    """
+    latest = get_new_patch_notes()
+    with open("latest_patch.txt" , "r") as file_1:
+        saved =  file_1.read().strip("\n")  
+
+    return latest != saved, latest      
 
 #bot init, some datetime shenanigans
 bot = commands.Bot(command_prefix='!')
@@ -187,7 +213,6 @@ async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
             server_full = server
 
         name = sort_summoner_name(name, name2, name3)
-
         user_url = get_url(server)
         user_url_full = user_url + name
         stat_base = get_ranked(name, server_full)
@@ -243,13 +268,10 @@ async def champions_mastery(ctx, server='euw', name="",name2="", name3=""):
         else: 
             server_full = server
 
-        
-
         name = sort_summoner_name(name, name2, name3)
         user_champs = get_champion_stats(name, server_full)
         embed = discord.Embed(
-        title= "Champion Mastery"
-                
+        title= "Champion Mastery"       
         )
         
         embed.add_field(name=f'{user_champs[0][0]}', value=f"{user_champs[0][1]} points (lvl {user_champs[0][2]})", inline=False )
@@ -262,20 +284,16 @@ async def champions_mastery(ctx, server='euw', name="",name2="", name3=""):
 
     except Exception as e:
         error_message = discord.Embed(
-
         )
         error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.")
         error_message.add_field(name='!command', value='Display bot commands and other information', inline=False)
         
-        
-
-
         await ctx.send(embed=error_message)
 
 @bot.command(name = 'patch')
 async def patch_notes(ctx):
     try:
-        patch_notes = get_patch_notes()
+        patch_notes = get_new_patch_notes()
         await ctx.send(patch_notes)
     except Exception as e:
         await ctx.send("No patch notes found :O\nPlease try again later!")
@@ -286,14 +304,34 @@ async def help_print(ctx):
     message = discord.Embed(
         title = 'Commands'
     )
-   
     message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
     message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
     message.add_field(name='!patch', value='Type !patch to get the latest patch notes (link)', inline=False)
     message.add_field(name='Supported servers', value='North America = na\nEurope West = euw\nEurope Nordic/East = eune\nKorea = kr', inline=False)
     
-
     await ctx.send(embed=message)
+
+#task for automated patch posting 
+#runs every 6 hours checks if there is a new patch, if yes send a message containing a link to the patch notes
+#atm only works for one specific guild!
+@tasks.loop(hours=6)
+async def automated_patch_notes():
+    is_new_patch, latest_patch = compare_patch()
+
+    if is_new_patch:
+        channel = discord.utils.get(bot.get_all_channels())
+        if channel.name == "moti":
+            await channel.send("League of legends new patch notes!\n" + latest_patch)
+        save_patch_notes(latest_patch)  
+    else:
+        return
+   
+#bot waits for the loops
+@automated_patch_notes.before_loop
+async def before():
+    await bot.wait_until_ready() 
+
+automated_patch_notes.start()
 
 if __name__ == '__main__':
     print("Bot Connected!")
