@@ -9,6 +9,7 @@ from configparser import ConfigParser
 import discord
 from discord.ext import commands
 from datetime import datetime,timedelta
+from bs4 import BeautifulSoup
 
 #Read tokens/keys from config
 leaguebot_config = ConfigParser()
@@ -161,7 +162,13 @@ def sort_summoner_name(name, name2, name3):
             concat_name += "%20" + name3
         return concat_name
     
+def get_patch_notes(): 
+    a = requests.get("https://www.leagueoflegends.com/en-us/news/tags/patch-notes/")
+    soup = BeautifulSoup(a.content, "html.parser")
+
+    a_tags = soup.find("a")
     
+    return "https://leagueoflegends.com" + a_tags["href"]  
 
 #bot init, some datetime shenanigans
 bot = commands.Bot(command_prefix='!')
@@ -219,10 +226,8 @@ async def lol_stats(ctx, server='euw', name="", name2="", name3=""):
         )
         error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.", inline=False)
         error_message.add_field(name='Not ranked? :/', value="This message is displayed with correct parameters if the user\nhas not completed ranked placement games in the current season!", inline=False)
-        error_message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
-        error_message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
-        error_message.add_field(name='Supported servers', value='North America = na\nEurope West = euw\nEurope Nordic/East = eune\nKorea = kr', inline=False)
-
+        error_message.add_field(name='!command', value='Display bot commands and other information', inline=False)
+        print(e)
 
         await ctx.send(embed=error_message)
         
@@ -260,12 +265,20 @@ async def champions_mastery(ctx, server='euw', name="",name2="", name3=""):
 
         )
         error_message.add_field(name='Something went wrong!', value="Check that your command is typed correctly.")
-        error_message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
-        error_message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
+        error_message.add_field(name='!command', value='Display bot commands and other information', inline=False)
+        
         
 
 
         await ctx.send(embed=error_message)
+
+@bot.command(name = 'patch')
+async def patch_notes(ctx):
+    try:
+        patch_notes = get_patch_notes()
+        await ctx.send(patch_notes)
+    except Exception as e:
+        await ctx.send("No patch notes found :O\nPlease try again later!")
 
 #help/info command!
 @bot.command(name = 'command')
@@ -276,6 +289,7 @@ async def help_print(ctx):
    
     message.add_field(name='!ranked', value='Type !ranked server summonername to get ranked stats!', inline=False)
     message.add_field(name='!champs', value='Type !champs server summonername to get 5 most played champs!', inline=False)
+    message.add_field(name='!patch', value='Type !patch to get the latest patch notes (link)', inline=False)
     message.add_field(name='Supported servers', value='North America = na\nEurope West = euw\nEurope Nordic/East = eune\nKorea = kr', inline=False)
     
 
