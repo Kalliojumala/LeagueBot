@@ -10,5 +10,5 @@ Current functions:
 
 !champs = gets 5 most played champions, mastery points and level for requested summoner (region & summonerName required)
 
-Bot programmed by Joel Kallio, improvement ideas can be sent to joel.kallio@gmail.com
+Bot programmed by Joel Kallio, improvement ideas can be sent to joel.kallio@gmail.com\n
 Amazing logo artwork & design by Teemu Syrjälä.
